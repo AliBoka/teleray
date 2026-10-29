@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TG V2Ray Exporter
 
-## Getting Started
+سامانه‌ی مدرن، منعطف و بدون نیاز به API Key برای استخراج کانفیگ‌های V2Ray از کانال‌های عمومی تلگرام و ساخت سابسکرایب زنده مبتنی بر **Next.js** و **TypeScript**.
 
-First, run the development server:
+---
 
+## ✨ امکانات و قابلیت‌ها
+
+- **استخراج بدون نیاز به API تلگرام**: پایش و خزش کانال‌های عمومی از طریق وب‌پریویو رسمی (`t.me/s/:channel`) همراه با صفحه‌بندی خودکار تا N پیام اخیر.
+- **پشتیبانی کامل از پروتکل‌های ارتباطی**:
+  - `vmess://` (همراه با دیکد Base64 و متادیتا)
+  - `vless://`
+  - `trojan://`
+  - `ss://` / `ssr://` (Shadowsocks و ShadowsocksR)
+  - `hy2://` / `hysteria2://`
+  - `tuic://`
+  - `wireguard://`
+  - استخراج خودکار از بلوک‌های متنی کُدگذاری‌شده (Base64)
+- **شخصی‌سازی پیشرفته (Full Customization)**:
+  - فیلتر بر اساس پروتکل‌های دلخواه
+  - حذف هوشمند کانفیگ‌های تکراری بر پایه هش سرور، پورت و هویت کاربر
+  - قالب‌بندی و تغییر نام دلخواه کانفیگ‌ها (Remark Template) با متغیرهای `{channel}`, `{protocol}`, `{index}`, `{server}`, `{port}`
+- **خروجی منعطف و بدون نیاز به هیچ کلیدی**:
+  - **لینک سابسکرایب زنده (Live Subscription)**: اندپوینت اختصاصی `/api/sub/:channel` با قابلیت اضافه شدن به عنوان سابسکرایب مستقیم در نرم‌افزارهای v2rayNG, V2RayN, Streisand, Sing-box
+  - دانلود مستقیم فایل متنی `.txt`
+  - کپی تکی یا دسته‌جمعی به صورت متنی یا Base64
+  - ذخیره‌سازی محلی کانال‌ها و وضعیت در فایل JSON محلی
+- **معماری ماژولار Storage Provider**:
+  - `LocalFileStorageProvider` (فعال به صورت پیش‌فرض و آفلاین)
+  - `GoogleDriveStorageProvider` (اسکلت آماده برای فعال‌سازی با وارد کردن متغیرهای محیطی در فاز بعدی)
+
+---
+
+## 🚀 راه‌اندازی و اجرا
+
+### پیش‌نیازها
+- Node.js نسخه 20 به بالا
+- pnpm یا npm
+
+### نصب وابستگی‌ها
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+# یا
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### اجرای محیط توسعه
+```bash
+npm run dev
+```
+سپس مرورگر را باز کرده و به آدرس [http://localhost:3000](http://localhost:3000) مراجعه کنید.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### اجرای تست‌های خودکار
+```bash
+npm test
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### بیلد برای پروداکشن
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 📡 آدرس سابسکرایب زنده (Live Subscription)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+پس از اجرای برنامه، می‌توانید آدرس زیر را مستقیماً به عنوان سابسکرایب در نرم‌افزارهای V2Ray اضافه کنید:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+http://localhost:3000/api/sub/<channel_username>
+```
 
-## Deploy on Vercel
+همچنین برای دریافت خروجی متنی خام (Plaintext) به جای Base64:
+```text
+http://localhost:3000/api/sub/<channel_username>?format=raw
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ☁️ اتصال به Google Drive (فاز بعدی)
+
+برای ذخیره فایل‌های کانفیگ به صورت مستقیم در گوگل درایو، مقادیر زیر را در فایل `.env.local` تنظیم فرمایید:
+
+```env
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_REFRESH_TOKEN=your-refresh-token
+GOOGLE_DRIVE_FOLDER_ID=your-folder-id # اختیاری
+```
