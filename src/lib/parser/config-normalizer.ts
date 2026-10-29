@@ -1,4 +1,4 @@
-import type { ProtocolType, ScrapeOptions, V2RayConfig } from '../../types/config.ts';
+import type { ScrapeOptions, V2RayConfig } from '../../types/config.ts';
 import { ConfigParser } from './config-parser.ts';
 
 export class ConfigNormalizer {
