@@ -35,12 +35,10 @@
 
 ### پیش‌نیازها
 - Node.js نسخه 20 به بالا
-- pnpm یا npm
+- npm
 
 ### نصب وابستگی‌ها
 ```bash
-pnpm install
-# یا
 npm install
 ```
 
