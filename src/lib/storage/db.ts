@@ -68,9 +68,39 @@ export class DatabaseService {
       const initial: AppData = {
         channels: [
           {
-            id: 'sample-1',
-            username: 'v2rayng_org',
-            title: 'V2RayNG Official Channel',
+            id: 'ch-1',
+            username: 'ConfigsHUB',
+            title: 'ConfigsHUB',
+            configsCount: 0,
+          },
+          {
+            id: 'ch-2',
+            username: 'v2ray_collector',
+            title: 'V2Ray Collector',
+            configsCount: 0,
+          },
+          {
+            id: 'ch-3',
+            username: 'v2ray_free_conf',
+            title: 'V2Ray Free Configs',
+            configsCount: 0,
+          },
+          {
+            id: 'ch-4',
+            username: 'v2ray_outlineir',
+            title: 'Outline & V2Ray IR',
+            configsCount: 0,
+          },
+          {
+            id: 'ch-5',
+            username: 'freev2rays',
+            title: 'Free V2Rays',
+            configsCount: 0,
+          },
+          {
+            id: 'ch-6',
+            username: 'v2rayng_daily',
+            title: 'V2RayNG Daily',
             configsCount: 0,
           },
         ],
