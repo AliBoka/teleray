@@ -250,6 +250,7 @@ export default function Home() {
         channel={activeChannel}
         snapshotId={snapshotId}
         configsCount={configs.length}
+        configs={configs}
       />
     </div>
   );
