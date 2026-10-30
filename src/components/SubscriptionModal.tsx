@@ -17,6 +17,7 @@ export function SubscriptionModal({
   isOpen,
   onClose,
   channel,
+  snapshotId,
   configsCount,
   configs = [],
 }: SubscriptionModalProps) {
@@ -28,10 +29,11 @@ export function SubscriptionModal({
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
   const cleanChannel = channel.trim().replace(/^@+/, '');
+  const subTarget = snapshotId || cleanChannel;
   const subUrl =
     format === 'raw'
-      ? `${origin}/api/sub/${cleanChannel}?format=raw`
-      : `${origin}/api/sub/${cleanChannel}`;
+      ? `${origin}/api/sub/${subTarget}?format=raw`
+      : `${origin}/api/sub/${subTarget}`;
 
   const handleCopyLink = async () => {
     try {

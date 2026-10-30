@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AppStore } from '@/lib/storage/store';
+import { DatabaseService } from '@/lib/storage/db';
 
 export async function GET() {
   try {
-    const channels = await AppStore.getChannels();
+    const channels = await DatabaseService.getChannels();
     return NextResponse.json({ success: true, channels });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'خطای سرور';
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const channel = await AppStore.saveChannel(username, title);
+    const channel = await DatabaseService.saveChannel(username, title);
     return NextResponse.json({ success: true, channel });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'خطای سرور';
@@ -38,7 +38,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'شناسه کانال الزامی است.' }, { status: 400 });
     }
 
-    const deleted = await AppStore.removeChannel(id);
+    const deleted = await DatabaseService.deleteChannel(id);
     return NextResponse.json({ success: deleted });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'خطای سرور';

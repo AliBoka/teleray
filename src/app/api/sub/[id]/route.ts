@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AppStore } from '@/lib/storage/store';
+import { DatabaseService } from '@/lib/storage/db';
 import { TelegramScraper } from '@/lib/scraper/telegram';
 import { ConfigParser } from '@/lib/parser/config-parser';
 import { ConfigNormalizer } from '@/lib/parser/config-normalizer';
@@ -13,11 +13,11 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const format = searchParams.get('format') || 'base64';
 
-    // 1. Try finding snapshot by ID
-    let snapshot = await AppStore.getSnapshot(id);
+    // 1. Try finding unique subscription record in database
+    let subRecord = await DatabaseService.getSubscription(id);
 
     // 2. If not found, check if ID matches a channel username directly
-    if (!snapshot) {
+    if (!subRecord) {
       const cleanChannel = TelegramScraper.cleanChannelUsername(id);
       try {
         const messages = await TelegramScraper.fetchMessages(cleanChannel, 50);
@@ -33,19 +33,19 @@ export async function GET(
           limit: 50,
           deduplicate: true,
         });
-        snapshot = await AppStore.saveSnapshot(cleanChannel, configs);
+        subRecord = await DatabaseService.createSubscription(cleanChannel, configs);
       } catch {
         return new NextResponse('اشتراک یا کانال یافت نشد.', { status: 404 });
       }
     }
 
-    if (!snapshot || snapshot.configs.length === 0) {
+    if (!subRecord || subRecord.configs.length === 0) {
       return new NextResponse('هیچ کانفیگی برای این اشتراک وجود ندارد.', {
         status: 404,
       });
     }
 
-    const rawLines = snapshot.configs.map((c) => c.raw).join('\n');
+    const rawLines = subRecord.configs.map((c) => c.raw).join('\n');
 
     let bodyContent: string;
     if (format === 'raw') {
@@ -63,7 +63,7 @@ export async function GET(
         'Subscription-Userinfo': 'upload=0; download=0; total=107374182400; expire=0',
         'Cache-Control': 'public, max-age=60',
         'Access-Control-Allow-Origin': '*',
-        'Content-Disposition': `inline; filename="${snapshot.channel}-subscription.txt"`,
+        'Content-Disposition': `inline; filename="${subRecord.channel}-subscription.txt"`,
       },
     });
   } catch (err: unknown) {

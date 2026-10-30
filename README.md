@@ -63,6 +63,17 @@ npm start
 
 ---
 
+## ⚡ Deployment to Vercel (Free)
+
+This project is fully optimized for **Vercel Serverless (Free Tier)**:
+
+1. Push your repository to GitHub.
+2. Import the repository in [Vercel](https://vercel.com).
+3. (Optional for persistent database) In the Vercel Dashboard, go to **Storage** ➔ Create a **KV Database** (powered by Upstash, 100% free), and link it to your project. Vercel will automatically set `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+4. Deploy! Your unique subscription URLs will work globally with zero maintenance.
+
+---
+
 ## 📁 Project Structure
 
 ```text
@@ -71,9 +82,8 @@ src/
 │   ├── api/
 │   │   ├── channels/       # Saved channels management
 │   │   ├── export/         # Text file download endpoint
-│   │   ├── publish-paste/  # Cloud subscription generator
 │   │   ├── scrape/         # Telegram scraping endpoint
-│   │   └── sub/[id]/       # Local subscription endpoint
+│   │   └── sub/[id]/       # Unique subscription delivery endpoint
 │   ├── globals.css         # Styling, dark mode & Vazirmatn font
 │   ├── layout.tsx          # Root layout
 │   └── page.tsx            # Main application dashboard

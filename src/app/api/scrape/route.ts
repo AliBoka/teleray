@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { TelegramScraper } from '@/lib/scraper/telegram';
 import { ConfigParser } from '@/lib/parser/config-parser';
 import { ConfigNormalizer } from '@/lib/parser/config-normalizer';
-import { AppStore } from '@/lib/storage/store';
+import { DatabaseService } from '@/lib/storage/db';
 import { ScrapeOptions, ScrapeResult } from '@/types/config';
 
 export async function POST(req: NextRequest) {
@@ -50,8 +50,8 @@ export async function POST(req: NextRequest) {
       remarkTemplate,
     });
 
-    // 4. Save to store snapshot for live subscription URL
-    const snapshot = await AppStore.saveSnapshot(cleanChannel, processedConfigs);
+    // 4. Save unique subscription record to database
+    const subRecord = await DatabaseService.createSubscription(cleanChannel, processedConfigs);
 
     const result: ScrapeResult = {
       channel: cleanChannel,
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      snapshotId: snapshot.id,
+      snapshotId: subRecord.id,
       result,
     });
   } catch (err: unknown) {
