@@ -13,7 +13,7 @@ export class ConfigNormalizer {
       channel,
       protocols,
       deduplicate = true,
-      remarkTemplate = '{channel} | {protocol} #{index}',
+      remarkTemplate = '',
     } = options;
 
     const allowedProtocols = protocols && protocols.length > 0 ? new Set(protocols) : null;
@@ -40,7 +40,7 @@ export class ConfigNormalizer {
       let finalRemark = parsed.remark;
       let finalRaw = parsed.raw;
 
-      if (remarkTemplate) {
+      if (remarkTemplate && remarkTemplate.trim() !== '') {
         finalRemark = ConfigParser.formatRemark(remarkTemplate, {
           channel,
           protocol: parsed.protocol,

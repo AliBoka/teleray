@@ -24,14 +24,24 @@ export class TelegramScraper {
       .split('?')[0];
   }
 
+  public static validateUsername(username: string): void {
+    if (!username) {
+      throw new Error('لطفاً شناسه کانال تلگرام را وارد کنید.');
+    }
+
+    if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) {
+      throw new Error(
+        'شناسه کانال نامعتبر است. نام کاربری تلگرام باید فقط شامل حروف انگلیسی، اعداد یا خط زیر (_) باشد.'
+      );
+    }
+  }
+
   public static async fetchMessages(
     channelInput: string,
     limit: number = 100
   ): Promise<TelegramMessage[]> {
     const channel = this.cleanChannelUsername(channelInput);
-    if (!channel) {
-      throw new Error('نام کانال تلگرام نامعتبر است.');
-    }
+    this.validateUsername(channel);
 
     const messages: TelegramMessage[] = [];
     const seenIds = new Set<number>();
@@ -58,7 +68,7 @@ export class TelegramScraper {
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error(`کانال @${channel} یافت نشد یا خصوصی است.`);
+          throw new Error(`کانال @${channel} در تلگرام یافت نشد یا یک کانال خصوصی است.`);
         }
         throw new Error(`خطا در ارتباط با پیش‌نمایش وب تلگرام (${response.status})`);
       }
@@ -68,7 +78,19 @@ export class TelegramScraper {
 
       const messageNodes = $('.tgme_widget_message_wrap');
       if (messageNodes.length === 0) {
-        // No more messages found or channel is empty/blocked
+        if (attempts === 1) {
+          // If first attempt has no messages, check if page indicates contact or invalid channel
+          const isUserOrBot =
+            $('.tgme_page_extra').text().includes('contact') ||
+            $('.tgme_action_button_new').text().includes('Send Message');
+          if (isUserOrBot) {
+            throw new Error(`شناسه @${channel} مربوط به حساب کاربری/ربات است و کانال عمومی تلگرام نیست.`);
+          }
+          const channelTitle = $('.tgme_channel_info_header_title').text();
+          if (!channelTitle) {
+            throw new Error(`کانال @${channel} یافت نشد، خصوصی است یا دسترسی عمومی ندارد.`);
+          }
+        }
         break;
       }
 
@@ -88,7 +110,6 @@ export class TelegramScraper {
         }
 
         const textEl = $(el).find('.tgme_widget_message_text');
-        // Convert <br> to newline to preserve separation between configs
         textEl.find('br').replaceWith('\n');
         const text = textEl.text().trim();
 
@@ -111,7 +132,6 @@ export class TelegramScraper {
 
       messages.push(...batch);
 
-      // Prepare for next page (older messages)
       if (minBatchId !== Infinity && minBatchId > 1) {
         beforeId = minBatchId;
       } else {
@@ -119,9 +139,7 @@ export class TelegramScraper {
       }
     }
 
-    // Sort messages descending by ID (newest first)
     messages.sort((a, b) => b.id - a.id);
-
     return messages.slice(0, limit);
   }
 }

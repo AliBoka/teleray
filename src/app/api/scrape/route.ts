@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       limit = 100,
       protocols,
       deduplicate = true,
-      remarkTemplate = '{channel} | {protocol} #{index}',
+      remarkTemplate = '',
     } = body;
 
     if (!channel || channel.trim() === '') {
