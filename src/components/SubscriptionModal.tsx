@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, Copy, ExternalLink, Globe, Server, X, Zap, RefreshCw } from 'lucide-react';
+import { Check, Copy, ExternalLink, Link2, RefreshCw, X, Zap } from 'lucide-react';
 import { V2RayConfig } from '@/types/config';
 
 interface SubscriptionModalProps {
@@ -17,27 +17,20 @@ export function SubscriptionModal({
   isOpen,
   onClose,
   channel,
-  snapshotId,
   configsCount,
   configs = [],
 }: SubscriptionModalProps) {
-  const [activeTab, setActiveTab] = useState<'cloud' | 'internal'>('cloud');
   const [copied, setCopied] = useState(false);
-  const [cloudUrl, setCloudUrl] = useState<string | null>(null);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [publishError, setPublishError] = useState<string | null>(null);
+  const [subUrl, setSubUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const subTarget = snapshotId || channel;
-  const internalSubUrl = `${origin}/api/sub/${subTarget}`;
-
-  const currentDisplayUrl = activeTab === 'cloud' ? (cloudUrl || '') : internalSubUrl;
-
-  const handleCopy = async (textToCopy: string) => {
+  const handleCopy = async () => {
+    if (!subUrl) return;
     try {
-      await navigator.clipboard.writeText(textToCopy);
+      await navigator.clipboard.writeText(subUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -45,10 +38,10 @@ export function SubscriptionModal({
     }
   };
 
-  const handlePublishCloud = async () => {
+  const handleGenerateSubscription = async () => {
     if (configs.length === 0) return;
-    setIsPublishing(true);
-    setPublishError(null);
+    setIsLoading(true);
+    setError(null);
 
     try {
       const res = await fetch('/api/publish-paste', {
@@ -62,15 +55,15 @@ export function SubscriptionModal({
 
       const data = await res.json();
       if (!res.ok || !data.rawUrl) {
-        throw new Error(data.error || 'خطا در ایجاد لینک ابری');
+        throw new Error(data.error || 'خطا در ایجاد لینک اشتراک');
       }
 
-      setCloudUrl(data.rawUrl);
+      setSubUrl(data.rawUrl);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'خطای ناشناخته';
-      setPublishError(msg);
+      const msg = err instanceof Error ? err.message : 'خطای برقراری ارتباط با سرور';
+      setError(msg);
     } finally {
-      setIsPublishing(false);
+      setIsLoading(false);
     }
   };
 
@@ -84,15 +77,15 @@ export function SubscriptionModal({
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-5">
           <div className="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-950 border border-cyan-200 dark:border-cyan-800 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0">
             <Zap className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">
+            <h3 className="text-base font-bold text-zinc-900 dark:text-white">
               لینک Subscription
             </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 flex-wrap">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 flex-wrap mt-0.5">
               <span>شامل {configsCount} کانفیگ استخراج‌شده از</span>
               <span dir="ltr" className="font-mono font-bold text-zinc-800 dark:text-zinc-200">
                 @{channel}
@@ -101,122 +94,48 @@ export function SubscriptionModal({
           </div>
         </div>
 
-        {/* Tab switchers: Cloud Anonymous vs Internal Server */}
-        <div className="flex p-1 bg-zinc-100 dark:bg-zinc-950 rounded-xl mb-4 border border-zinc-200 dark:border-zinc-800 text-xs">
-          <button
-            type="button"
-            onClick={() => setActiveTab('cloud')}
-            className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 font-medium transition cursor-pointer ${
-              activeTab === 'cloud'
-                ? 'bg-white dark:bg-zinc-800 text-cyan-700 dark:text-cyan-300 shadow-xs'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-            }`}
-          >
-            <Globe className="w-3.5 h-3.5" />
-            <span>لینک ابری ناشناس (پیشنهادی)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('internal')}
-            className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 font-medium transition cursor-pointer ${
-              activeTab === 'internal'
-                ? 'bg-white dark:bg-zinc-800 text-cyan-700 dark:text-cyan-300 shadow-xs'
-                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-            }`}
-          >
-            <Server className="w-3.5 h-3.5" />
-            <span>لینک داخلی سرور (Internal)</span>
-          </button>
-        </div>
-
         <div className="space-y-4">
-          {activeTab === 'cloud' ? (
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                  لینک ابری Pastebin (کاملاً عمومی، ناشناس و بدون ردپا):
-                </label>
-                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                  بدون جیمیل / بدون نیاز به اکانت
-                </span>
-              </div>
-
-              {!cloudUrl ? (
-                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-center space-y-3">
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                    با کلیک روی دکمه زیر، یک لینک Subscription ابری پایدار و ۱۰۰٪ ناشناس تولید می‌شود که مستقیماً قابل استفاده در v2rayNG و سایر نرم‌افزارها است.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handlePublishCloud}
-                    disabled={isPublishing || configsCount === 0}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-2 mx-auto shadow-sm shadow-cyan-600/20 disabled:opacity-50 cursor-pointer transition"
-                  >
-                    {isPublishing ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>درحال تولید لینک ناشناس...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Globe className="w-4 h-4" />
-                        <span>تولید لینک ابری ناشناس (Pastebin)</span>
-                      </>
-                    )}
-                  </button>
-                  {publishError && (
-                    <div className="text-xs text-red-500">{publishError}</div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={cloudUrl}
-                    className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-mono text-cyan-700 dark:text-cyan-300 select-all"
-                    dir="ltr"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(cloudUrl)}
-                    className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 shrink-0 transition cursor-pointer ${
-                      copied
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800'
-                        : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm shadow-cyan-600/20'
-                    }`}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        <span>کپی شد</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>کپی لینک</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
+          {!subUrl ? (
+            <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-center space-y-3">
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                جهت دریافت لینک مستقیم و قابل استفاده در نرم‌افزارهای کلاینت V2Ray، روی دکمه زیر کلیک کنید.
+              </p>
+              <button
+                type="button"
+                onClick={handleGenerateSubscription}
+                disabled={isLoading || configsCount === 0}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-2 mx-auto shadow-sm shadow-cyan-600/20 disabled:opacity-50 cursor-pointer transition"
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>درحال ایجاد لینک...</span>
+                  </>
+                ) : (
+                  <>
+                    <Link2 className="w-4 h-4" />
+                    <span>ایجاد لینک Subscription</span>
+                  </>
+                )}
+              </button>
+              {error && <div className="text-xs text-red-500 mt-2">{error}</div>}
             </div>
           ) : (
             <div>
-              <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5">
-                آدرس Subscription داخلی سرور پروژه:
+              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                آدرس Subscription:
               </label>
               <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   readOnly
-                  value={internalSubUrl}
+                  value={subUrl}
                   className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-mono text-cyan-700 dark:text-cyan-300 select-all"
                   dir="ltr"
                 />
                 <button
                   type="button"
-                  onClick={() => handleCopy(internalSubUrl)}
+                  onClick={handleCopy}
                   className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 shrink-0 transition cursor-pointer ${
                     copied
                       ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800'
@@ -241,25 +160,25 @@ export function SubscriptionModal({
 
           <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 space-y-2">
             <div className="font-semibold text-zinc-900 dark:text-zinc-200">
-              💡 نحوه استفاده در کلاینت‌های V2Ray:
+              راهنمای استفاده در کلاینت‌های V2Ray:
             </div>
             <ul className="list-disc list-inside space-y-1 text-zinc-600 dark:text-zinc-400">
               <li>
-                <strong className="text-zinc-900 dark:text-zinc-200">v2rayNG (اندروید):</strong> منوی کناری ➔ گروه‌های اشتراک ➔ افزودن (+) ➔ نشانی اشتراک را پیست کرده و ذخیره کنید.
+                <strong className="text-zinc-900 dark:text-zinc-200">v2rayNG (اندروید):</strong> منوی کناری ➔ گروه‌های اشتراک ➔ افزودن (+) ➔ نشانی اشتراک را وارد و ذخیره کنید.
               </li>
               <li>
                 <strong className="text-zinc-900 dark:text-zinc-200">V2RayN (ویندوز):</strong> Subscription group ➔ Subscription setting ➔ Add ➔ لینک را وارد و Update کنید.
               </li>
               <li>
-                <strong className="text-zinc-900 dark:text-zinc-200">Shadowrocket / Streisand (iOS):</strong> دکمه + ➔ Type: Subscribe ➔ URL را پیست کنید.
+                <strong className="text-zinc-900 dark:text-zinc-200">Shadowrocket / Streisand (iOS):</strong> دکمه + ➔ Type: Subscribe ➔ URL را وارد کنید.
               </li>
             </ul>
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
-            {currentDisplayUrl && (
+            {subUrl ? (
               <a
-                href={currentDisplayUrl}
+                href={subUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="text-zinc-500 hover:text-cyan-600 dark:text-zinc-400 dark:hover:text-cyan-400 flex items-center gap-1 transition"
@@ -267,10 +186,12 @@ export function SubscriptionModal({
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>مشاهده محتوا در مرورگر</span>
               </a>
+            ) : (
+              <div />
             )}
             <button
               onClick={onClose}
-              className="px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium transition cursor-pointer mr-auto"
+              className="px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium transition cursor-pointer"
             >
               بستن
             </button>

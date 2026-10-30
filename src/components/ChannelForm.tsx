@@ -191,10 +191,10 @@ export function ChannelForm({
                   <button
                     type="button"
                     onClick={() => onDeleteChannel(c.id)}
-                    className="opacity-60 sm:opacity-0 sm:group-hover:opacity-100 text-zinc-400 hover:text-red-500 transition mr-1"
+                    className="text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 transition cursor-pointer p-0.5"
                     title="حذف کانال"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))}

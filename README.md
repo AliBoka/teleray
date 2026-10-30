@@ -1,59 +1,61 @@
 # TG V2Ray Exporter
 
-سامانه‌ی مدرن، منعطف و بدون نیاز به API Key برای استخراج کانفیگ‌های V2Ray از کانال‌های عمومی تلگرام و ساخت لینک Subscription مبتنی بر **Next.js** و **TypeScript**.
+> A modern, zero-config tool for extracting, filtering, and exporting V2Ray configurations from public Telegram channels. Built with **Next.js**, **TypeScript**, and **Tailwind CSS**.
 
 ---
 
-## ✨ امکانات و قابلیت‌ها
+## ✨ Features
 
-- **استخراج بدون نیاز به API تلگرام**: پایش و خزش کانال‌های عمومی از طریق وب‌پریویو رسمی (`t.me/s/:channel`) همراه با صفحه‌بندی خودکار تا N پیام اخیر.
-- **پشتیبانی کامل از پروتکل‌های ارتباطی**:
-  - `vmess://` (همراه با دیکد Base64 و متادیتا)
+- **No Telegram API Required**: Automatically crawls public channels via web preview (`t.me/s/:channel`) with backward pagination up to any number of recent messages.
+- **Multi-Protocol Support**:
+  - `vmess://` (JSON parsed & base64 decoded)
   - `vless://`
   - `trojan://`
-  - `ss://` / `ssr://` (Shadowsocks و ShadowsocksR)
+  - `ss://` / `ssr://` (Shadowsocks & ShadowsocksR)
   - `hy2://` / `hysteria2://`
   - `tuic://`
   - `wireguard://`
-  - استخراج خودکار از بلوک‌های متنی کُدگذاری‌شده (Base64)
-- **شخصی‌سازی پیشرفته (Full Customization)**:
-  - فیلتر بر اساس پروتکل‌های دلخواه
-  - حذف هوشمند کانفیگ‌های تکراری بر پایه هش سرور، پورت و هویت کاربر
-  - حفظ نام اصلی کانفیگ‌ها به صورت پیش‌فرض، با قابلیت شخصی‌سازی با الگو (Remark Template)
-- **خروجی منعطف و بدون نیاز به هیچ کلیدی**:
-  - **لینک Subscription**: اندپوینت اختصاصی `/api/sub/:channel` با قابلیت اضافه شدن به عنوان اشتراک مستقیم در نرم‌افزارهای v2rayNG, V2RayN, Streisand, Sing-box
-  - دانلود مستقیم فایل متنی `.txt`
-  - کپی تکی یا دسته‌جمعی به صورت متنی یا Base64
-  - ذخیره‌سازی محلی کانال‌ها و وضعیت در فایل JSON محلی
-- **معماری ماژولار Storage Provider**:
-  - `LocalFileStorageProvider` (فعال به صورت پیش‌فرض و آفلاین)
-  - `GoogleDriveStorageProvider` (اسکلت آماده برای فعال‌سازی با وارد کردن متغیرهای محیطی در فاز بعدی)
+  - Automatic detection of base64-encoded configuration blocks.
+- **Advanced Filtering & Deduplication**:
+  - Whitelist specific protocols.
+  - Smart deduplication based on cryptographic hash of server, port, and credential identity.
+  - Optional custom remark templating (`{channel}`, `{protocol}`, `{index}`, `{server}`, `{port}`) while preserving original names by default.
+- **Export Options**:
+  - **Subscription Links**: Instant generation of standard subscription URLs compatible with v2rayNG, V2RayN, Streisand, and Sing-box.
+  - **File Download**: Export raw configurations as `.txt` files.
+  - **One-Click Copy**: Copy configurations in raw plaintext or Base64 format.
+- **Clean UI**:
+  - Light and Dark mode with responsive design.
+  - Persian (Vazirmatn) typography.
+  - Quick-access saved channels.
 
 ---
 
-## 🚀 راه‌اندازی و اجرا
+## 🚀 Quick Start
 
-### پیش‌نیازها
-- Node.js نسخه 20 به بالا
+### Prerequisites
+- Node.js 20+
 - npm
 
-### نصب وابستگی‌ها
+### Installation
 ```bash
+git clone https://github.com/your-username/tg-v2ray-exporter.git
+cd tg-v2ray-exporter
 npm install
 ```
 
-### اجرای محیط توسعه
+### Development
 ```bash
 npm run dev
 ```
-سپس مرورگر را باز کرده و به آدرس [http://localhost:3000](http://localhost:3000) مراجعه کنید.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### اجرای تست‌های خودکار
+### Run Tests
 ```bash
 npm test
 ```
 
-### بیلد برای پروداکشن
+### Production Build
 ```bash
 npm run build
 npm start
@@ -61,28 +63,35 @@ npm start
 
 ---
 
-## 📡 آدرس اشتراک Subscription
-
-پس از اجرای برنامه، می‌توانید آدرس زیر را مستقیماً به عنوان Subscription در نرم‌افزارهای V2Ray اضافه کنید:
+## 📁 Project Structure
 
 ```text
-http://localhost:3000/api/sub/<channel_username>
-```
-
-همچنین برای دریافت خروجی متنی خام (Plaintext) به جای Base64:
-```text
-http://localhost:3000/api/sub/<channel_username>?format=raw
+src/
+├── app/
+│   ├── api/
+│   │   ├── channels/       # Saved channels management
+│   │   ├── export/         # Text file download endpoint
+│   │   ├── publish-paste/  # Cloud subscription generator
+│   │   ├── scrape/         # Telegram scraping endpoint
+│   │   └── sub/[id]/       # Local subscription endpoint
+│   ├── globals.css         # Styling, dark mode & Vazirmatn font
+│   ├── layout.tsx          # Root layout
+│   └── page.tsx            # Main application dashboard
+├── components/
+│   ├── ChannelForm.tsx     # Channel input, protocol & filter options
+│   ├── ConfigCard.tsx      # Config details card & quick copy
+│   ├── ExportToolbar.tsx   # Action bar for export & download
+│   ├── Navbar.tsx          # Header with theme toggle & links
+│   └── SubscriptionModal.tsx # Subscription URL generator & guides
+├── lib/
+│   ├── parser/             # Protocol parsers & deduplication engine
+│   ├── scraper/            # Telegram web crawler
+│   └── storage/            # Local JSON store & providers
+└── types/                  # TypeScript data models
 ```
 
 ---
 
-## ☁️ اتصال به Google Drive (فاز بعدی)
+## 📄 License
 
-برای ذخیره فایل‌های کانفیگ به صورت مستقیم در گوگل درایو، مقادیر زیر را در فایل `.env.local` تنظیم فرمایید:
-
-```env
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REFRESH_TOKEN=your-refresh-token
-GOOGLE_DRIVE_FOLDER_ID=your-folder-id # اختیاری
-```
+This project is licensed under the [MIT License](LICENSE).
