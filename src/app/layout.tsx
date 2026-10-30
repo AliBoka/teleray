@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'TG V2Ray Exporter',
-  description: 'Telegram Channel V2Ray Config Extractor and Subscription Server',
+  title: 'TeleRay',
+  description: 'V2Ray config scraper and subscription generator from Telegram channels',
   icons: {
     icon: '/icon.svg',
     shortcut: '/icon.svg',

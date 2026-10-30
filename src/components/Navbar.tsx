@@ -57,7 +57,7 @@ export function Navbar() {
           </div>
           <div className="min-w-0">
             <h1 className="font-bold text-base sm:text-lg text-zinc-900 dark:text-white truncate">
-              TG V2Ray Exporter
+              TeleRay
             </h1>
             <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
               <span className="sm:hidden">استخراج و ساخت Subscription</span>

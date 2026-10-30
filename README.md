@@ -1,4 +1,4 @@
-# TG V2Ray Exporter
+# TeleRay
 
 > A modern, zero-config tool for extracting, filtering, and exporting V2Ray configurations from public Telegram channels. Built with **Next.js**, **TypeScript**, and **Tailwind CSS**.
 
@@ -39,8 +39,8 @@
 
 ### Installation
 ```bash
-git clone https://github.com/your-username/tg-v2ray-exporter.git
-cd tg-v2ray-exporter
+git clone https://github.com/your-username/teleray.git
+cd teleray
 npm install
 ```
 
