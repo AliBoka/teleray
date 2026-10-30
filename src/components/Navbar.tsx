@@ -56,16 +56,12 @@ export function Navbar() {
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h1 className="font-bold text-base sm:text-lg text-zinc-900 dark:text-white truncate">
-                TG V2Ray Exporter
-              </h1>
-              <span className="text-[11px] bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-800/60 px-1.5 py-0.5 rounded-full font-mono font-medium">
-                v1.0
-              </span>
-            </div>
-            <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate">
-              استخراج خودکار کانفیگ و ساخت لینک Subscription
+            <h1 className="font-bold text-base sm:text-lg text-zinc-900 dark:text-white truncate">
+              TG V2Ray Exporter
+            </h1>
+            <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="sm:hidden">استخراج و ساخت Subscription</span>
+              <span className="hidden sm:inline">استخراج خودکار کانفیگ و ساخت لینک Subscription</span>
             </p>
           </div>
         </div>
@@ -75,11 +71,11 @@ export function Navbar() {
             href="https://t.me/tg_v2ray_exporter"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 dark:bg-blue-950/60 dark:border-blue-800/60 dark:text-blue-300 dark:hover:bg-blue-900/60 transition text-xs font-mono"
+            className="flex items-center gap-1.5 px-3 h-9 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 dark:bg-blue-950/60 dark:border-blue-800/60 dark:text-blue-300 dark:hover:bg-blue-900/60 transition text-[13px] sm:text-sm font-mono font-medium"
             title="مشاهده کانال در تلگرام"
             dir="ltr"
           >
-            <Send className="w-3.5 h-3.5 text-blue-500" />
+            <Send className="w-4 h-4 text-blue-500 shrink-0" />
             <span className="hidden sm:inline">@tg_v2ray_exporter</span>
             <span className="sm:hidden">چنل</span>
           </a>

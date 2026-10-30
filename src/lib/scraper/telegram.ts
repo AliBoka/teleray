@@ -18,10 +18,11 @@ export class TelegramScraper {
   public static cleanChannelUsername(input: string): string {
     return input
       .trim()
-      .replace(/^https?:\/\/(t\.me|telegram\.me)\/(s\/)?/i, '')
-      .replace(/^@/, '')
+      .replace(/^(https?:\/\/)?(t\.me|telegram\.me)\/(s\/)?/i, '')
+      .replace(/^@+/, '')
       .split('/')[0]
-      .split('?')[0];
+      .split('?')[0]
+      .trim();
   }
 
   public static validateUsername(username: string): void {

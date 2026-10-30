@@ -105,7 +105,7 @@ export function ExportToolbar({
                   : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700'
               }`}
             >
-              همه ({configs.length})
+              all ({configs.length})
             </button>
             {Object.entries(protocolCounts).map(([proto, count]) => (
               <button

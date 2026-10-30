@@ -103,7 +103,15 @@ export function ChannelForm({
 
   const handleSaveChannel = async () => {
     if (!newChannelInput.trim()) return;
-    await onAddChannel(newChannelInput.trim());
+    const clean = newChannelInput
+      .trim()
+      .replace(/^(https?:\/\/)?(t\.me|telegram\.me)\/(s\/)?/i, '')
+      .replace(/^@+/, '')
+      .split('/')[0]
+      .split('?')[0]
+      .trim();
+    if (!clean) return;
+    await onAddChannel(clean);
     setNewChannelInput('');
   };
 

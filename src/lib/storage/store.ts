@@ -55,7 +55,13 @@ export class AppStore {
 
   public static async saveChannel(username: string, title?: string): Promise<SavedChannel> {
     const data = await this.ensureInitialized();
-    const cleanUsername = username.trim().replace(/^@/, '');
+    const cleanUsername = username
+      .trim()
+      .replace(/^(https?:\/\/)?(t\.me|telegram\.me)\/(s\/)?/i, '')
+      .replace(/^@+/, '')
+      .split('/')[0]
+      .split('?')[0]
+      .trim();
 
     const existing = data.channels.find(
       (c) => c.username.toLowerCase() === cleanUsername.toLowerCase()

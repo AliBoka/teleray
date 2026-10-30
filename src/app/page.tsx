@@ -36,13 +36,20 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     setStats(null);
-    setActiveChannel(options.channel);
+    const cleaned = options.channel
+      .trim()
+      .replace(/^(https?:\/\/)?(t\.me|telegram\.me)\/(s\/)?/i, '')
+      .replace(/^@+/, '')
+      .split('/')[0]
+      .split('?')[0]
+      .trim();
+    setActiveChannel(cleaned);
 
     try {
       const res = await fetch('/api/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(options),
+        body: JSON.stringify({ ...options, channel: cleaned }),
       });
 
       const data = await res.json();
@@ -51,6 +58,7 @@ export default function Home() {
         throw new Error(data.error || 'خطا در استخراج پیام‌ها');
       }
 
+      setActiveChannel(data.result.channel);
       setConfigs(data.result.configs);
       setSnapshotId(data.snapshotId);
       setStats({
