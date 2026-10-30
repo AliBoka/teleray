@@ -4,9 +4,26 @@ import { ConfigParser } from '@/lib/parser/config-parser';
 import { ConfigNormalizer } from '@/lib/parser/config-normalizer';
 import { DatabaseService } from '@/lib/storage/db';
 import { ScrapeOptions, ScrapeResult } from '@/types/config';
+import { getClientIp, rateLimit } from '@/lib/ratelimit';
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = await getClientIp();
+    const rl = await rateLimit(`scrape_${ip}`, 15);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: 'تعداد درخواست‌ها بیش از حد مجاز است (حداکثر ۱۵ درخواست در دقیقه). لطفاً یک دقیقه دیگر تلاش کنید.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': '60',
+            'X-RateLimit-Limit': '15',
+            'X-RateLimit-Remaining': String(rl.remaining),
+          },
+        }
+      );
+    }
+
     const body: ScrapeOptions = await req.json();
     const {
       channel,

@@ -3,12 +3,26 @@ import { DatabaseService } from '@/lib/storage/db';
 import { TelegramScraper } from '@/lib/scraper/telegram';
 import { ConfigParser } from '@/lib/parser/config-parser';
 import { ConfigNormalizer } from '@/lib/parser/config-normalizer';
+import { getClientIp, rateLimit } from '@/lib/ratelimit';
 
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const ip = await getClientIp();
+    const rl = await rateLimit(`sub_${ip}`, 15);
+    if (!rl.success) {
+      return new NextResponse('تعداد درخواست‌ها بیش از حد مجاز است (حداکثر ۱۵ درخواست در دقیقه). لطفاً یک دقیقه دیگر تلاش کنید.', {
+        status: 429,
+        headers: {
+          'Retry-After': '60',
+          'X-RateLimit-Limit': '15',
+          'X-RateLimit-Remaining': String(rl.remaining),
+        },
+      });
+    }
+
     const { id } = await context.params;
     const { searchParams } = new URL(req.url);
     const format = searchParams.get('format') || 'base64';
