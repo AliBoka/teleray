@@ -79,31 +79,6 @@ export default function Home() {
     }
   };
 
-  const handleAddChannel = async (username: string) => {
-    try {
-      const res = await fetch('/api/channels', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username }),
-      });
-      const data = await res.json();
-      if (data.channel) {
-        setSavedChannels((prev) => [...prev, data.channel]);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDeleteChannel = async (id: string) => {
-    try {
-      await fetch(`/api/channels?id=${id}`, { method: 'DELETE' });
-      setSavedChannels((prev) => prev.filter((c) => c.id !== id));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const handleUpdateRemark = (id: string, newRemark: string) => {
     setConfigs((prev) =>
       prev.map((c) => {
@@ -142,8 +117,6 @@ export default function Home() {
           onScrape={handleScrape}
           isLoading={isLoading}
           savedChannels={savedChannels}
-          onAddChannel={handleAddChannel}
-          onDeleteChannel={handleDeleteChannel}
         />
 
         {/* Error notification (e.g. invalid username, channel not found) */}

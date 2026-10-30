@@ -1,15 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useSyncExternalStore } from 'react';
 import { ProtocolType, SavedChannel, ScrapeOptions } from '@/types/config';
-import { Sliders, RefreshCw, BookmarkPlus, Radio, Trash2, Check } from 'lucide-react';
+import { Sliders, RefreshCw, BookmarkPlus, Radio, Trash2, Check, User, Sparkles } from 'lucide-react';
 
 interface ChannelFormProps {
   onScrape: (options: ScrapeOptions) => Promise<void>;
   isLoading: boolean;
-  savedChannels: SavedChannel[];
-  onAddChannel: (username: string) => Promise<void>;
-  onDeleteChannel: (id: string) => Promise<void>;
+  savedChannels?: SavedChannel[];
+}
+
+function subscribePersonalChannels(callback: () => void) {
+  window.addEventListener('storage', callback);
+  window.addEventListener('teleray_personal_updated', callback);
+  return () => {
+    window.removeEventListener('storage', callback);
+    window.removeEventListener('teleray_personal_updated', callback);
+  };
+}
+
+function getPersonalChannelsSnapshot(): string {
+  if (typeof window === 'undefined') return '[]';
+  return localStorage.getItem('teleray_personal_channels') || '[]';
+}
+
+function getPersonalChannelsServerSnapshot(): string {
+  return '[]';
 }
 
 const AVAILABLE_PROTOCOLS: {
@@ -60,8 +76,6 @@ export function ChannelForm({
   onScrape,
   isLoading,
   savedChannels,
-  onAddChannel,
-  onDeleteChannel,
 }: ChannelFormProps) {
   const [channel, setChannel] = useState('');
   const [limit, setLimit] = useState(100);
@@ -78,6 +92,21 @@ export function ChannelForm({
   const [remarkTemplate, setRemarkTemplate] = useState('{channel} | {protocol} #{index}');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [newChannelInput, setNewChannelInput] = useState('');
+  const [channelTab, setChannelTab] = useState<'featured' | 'personal'>('featured');
+
+  const personalChannelsRaw = useSyncExternalStore(
+    subscribePersonalChannels,
+    getPersonalChannelsSnapshot,
+    getPersonalChannelsServerSnapshot
+  );
+
+  const personalChannels: { id: string; username: string }[] = useMemo(() => {
+    try {
+      return JSON.parse(personalChannelsRaw);
+    } catch {
+      return [];
+    }
+  }, [personalChannelsRaw]);
 
   const toggleProtocol = (proto: ProtocolType) => {
     if (selectedProtocols.includes(proto)) {
@@ -101,7 +130,7 @@ export function ChannelForm({
     });
   };
 
-  const handleSaveChannel = async () => {
+  const handleSaveChannel = () => {
     if (!newChannelInput.trim()) return;
     const clean = newChannelInput
       .trim()
@@ -111,8 +140,30 @@ export function ChannelForm({
       .split('?')[0]
       .trim();
     if (!clean) return;
-    await onAddChannel(clean);
+
+    const exists = personalChannels.some(
+      (c) => c.username.toLowerCase() === clean.toLowerCase()
+    );
+    if (!exists) {
+      const updated = [
+        ...personalChannels,
+        { id: 'usr_' + Date.now().toString(36), username: clean },
+      ];
+      try {
+        localStorage.setItem('teleray_personal_channels', JSON.stringify(updated));
+        window.dispatchEvent(new Event('teleray_personal_updated'));
+      } catch {}
+    }
     setNewChannelInput('');
+    setChannelTab('personal');
+  };
+
+  const handleDeletePersonalChannel = (id: string) => {
+    const updated = personalChannels.filter((c) => c.id !== id);
+    try {
+      localStorage.setItem('teleray_personal_channels', JSON.stringify(updated));
+      window.dispatchEvent(new Event('teleray_personal_updated'));
+    } catch {}
   };
 
   const insertVariable = (varName: string) => {
@@ -168,37 +219,92 @@ export function ChannelForm({
           </div>
         </div>
 
-        {/* Quick select saved channels */}
-        {savedChannels.length > 0 && (
-          <div>
-            <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
-              کانال‌های ذخیره‌شده‌ی سریع:
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {savedChannels.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/60 rounded-lg px-2.5 py-1 text-xs text-zinc-700 dark:text-zinc-300 transition group"
+        {/* Quick select tabs: Featured vs Personal */}
+        {((savedChannels && savedChannels.length > 0) || personalChannels.length > 0) && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="inline-flex p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setChannelTab('featured')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition font-medium cursor-pointer ${
+                    channelTab === 'featured'
+                      ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-xs'
+                      : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
+                  }`}
                 >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>کانال‌های پیشنهادی</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChannelTab('personal')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition font-medium cursor-pointer ${
+                    channelTab === 'personal'
+                      ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-xs'
+                      : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
+                  }`}
+                >
+                  <User className="w-3.5 h-3.5 text-cyan-500" />
+                  <span>کانال‌های من</span>
+                  {personalChannels.length > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-mono">
+                      {personalChannels.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {channelTab === 'featured' ? (
+              <div className="flex flex-wrap gap-2">
+                {savedChannels?.map((c) => (
                   <button
+                    key={c.id}
                     type="button"
                     onClick={() => setChannel(c.username)}
-                    className="font-mono hover:text-cyan-600 dark:hover:text-cyan-400 transition"
+                    className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/60 rounded-lg px-2.5 py-1 text-xs text-zinc-700 dark:text-zinc-300 transition font-mono hover:text-cyan-600 dark:hover:text-cyan-400 cursor-pointer"
                     dir="ltr"
                   >
                     @{c.username}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onDeleteChannel(c.id)}
-                    className="text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 transition cursor-pointer p-0.5"
-                    title="حذف کانال"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div>
+                {personalChannels.length === 0 ? (
+                  <div className="text-xs text-zinc-400 dark:text-zinc-500 py-1">
+                    هنوز کانالی به لیست شخصی اضافه نکرده‌اید. از کادر «ذخیره کانال» در تنظیمات پیشرفته پایین می‌توانید کانال‌های دلخواهتان را ذخیره کنید.
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {personalChannels.map((c) => (
+                      <div
+                        key={c.id}
+                        className="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/60 rounded-lg px-2.5 py-1 text-xs text-zinc-700 dark:text-zinc-300 transition group"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setChannel(c.username)}
+                          className="font-mono hover:text-cyan-600 dark:hover:text-cyan-400 transition cursor-pointer"
+                          dir="ltr"
+                        >
+                          @{c.username}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePersonalChannel(c.id)}
+                          className="text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 transition cursor-pointer p-0.5"
+                          title="حذف کانال از لیست من"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
