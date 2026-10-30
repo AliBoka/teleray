@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, Copy, ExternalLink, Link2, RefreshCw, X, Zap } from 'lucide-react';
+import { Check, Copy, ExternalLink, Link2, X, Zap } from 'lucide-react';
 import { V2RayConfig } from '@/types/config';
 
 interface SubscriptionModalProps {
@@ -20,50 +20,37 @@ export function SubscriptionModal({
   configsCount,
   configs = [],
 }: SubscriptionModalProps) {
-  const [copied, setCopied] = useState(false);
-  const [subUrl, setSubUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedClipboard, setCopiedClipboard] = useState(false);
+  const [format, setFormat] = useState<'base64' | 'raw'>('base64');
 
   if (!isOpen) return null;
 
-  const handleCopy = async () => {
-    if (!subUrl) return;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const cleanChannel = channel.trim().replace(/^@+/, '');
+  const subUrl =
+    format === 'raw'
+      ? `${origin}/api/sub/${cleanChannel}?format=raw`
+      : `${origin}/api/sub/${cleanChannel}`;
+
+  const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(subUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
     } catch {
       // Fallback
     }
   };
 
-  const handleGenerateSubscription = async () => {
-    if (configs.length === 0) return;
-    setIsLoading(true);
-    setError(null);
-
+  const handleCopyAllConfigs = async () => {
     try {
-      const res = await fetch('/api/publish-paste', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          configs: configs.map((c) => c.raw),
-          format: 'raw',
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.rawUrl) {
-        throw new Error(data.error || 'خطا در ایجاد لینک اشتراک');
-      }
-
-      setSubUrl(data.rawUrl);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'خطای برقراری ارتباط با سرور';
-      setError(msg);
-    } finally {
-      setIsLoading(false);
+      const rawText = configs.map((c) => c.raw).join('\n');
+      await navigator.clipboard.writeText(rawText);
+      setCopiedClipboard(true);
+      setTimeout(() => setCopiedClipboard(false), 2000);
+    } catch {
+      // Fallback
     }
   };
 
@@ -88,75 +75,76 @@ export function SubscriptionModal({
             <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 flex-wrap mt-0.5">
               <span>شامل {configsCount} کانفیگ استخراج‌شده از</span>
               <span dir="ltr" className="font-mono font-bold text-zinc-800 dark:text-zinc-200">
-                @{channel}
+                @{cleanChannel}
               </span>
             </p>
           </div>
         </div>
 
         <div className="space-y-4">
-          {!subUrl ? (
-            <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-center space-y-3">
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                جهت دریافت لینک مستقیم و قابل استفاده در نرم‌افزارهای کلاینت V2Ray، روی دکمه زیر کلیک کنید.
-              </p>
-              <button
-                type="button"
-                onClick={handleGenerateSubscription}
-                disabled={isLoading || configsCount === 0}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-2 mx-auto shadow-sm shadow-cyan-600/20 disabled:opacity-50 cursor-pointer transition"
-              >
-                {isLoading ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>درحال ایجاد لینک...</span>
-                  </>
-                ) : (
-                  <>
-                    <Link2 className="w-4 h-4" />
-                    <span>ایجاد لینک Subscription</span>
-                  </>
-                )}
-              </button>
-              {error && <div className="text-xs text-red-500 mt-2">{error}</div>}
-            </div>
-          ) : (
-            <div>
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
                 آدرس Subscription:
               </label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={subUrl}
-                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-mono text-cyan-700 dark:text-cyan-300 select-all"
-                  dir="ltr"
-                />
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={handleCopy}
-                  className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 shrink-0 transition cursor-pointer ${
-                    copied
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800'
-                      : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm shadow-cyan-600/20'
+                  onClick={() => setFormat('base64')}
+                  className={`text-[11px] px-2 py-0.5 rounded-md font-mono transition cursor-pointer ${
+                    format === 'base64'
+                      ? 'bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold'
+                      : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                   }`}
                 >
-                  {copied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>کپی شد</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>کپی لینک</span>
-                    </>
-                  )}
+                  Base64 (استاندارد)
+                </button>
+                <span className="text-zinc-300 dark:text-zinc-700">|</span>
+                <button
+                  type="button"
+                  onClick={() => setFormat('raw')}
+                  className={`text-[11px] px-2 py-0.5 rounded-md font-mono transition cursor-pointer ${
+                    format === 'raw'
+                      ? 'bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-semibold'
+                      : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                  }`}
+                >
+                  Raw (متنی)
                 </button>
               </div>
             </div>
-          )}
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                readOnly
+                value={subUrl}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-mono text-cyan-700 dark:text-cyan-300 select-all"
+                dir="ltr"
+              />
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 shrink-0 transition cursor-pointer ${
+                  copiedLink
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800'
+                    : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm shadow-cyan-600/20'
+                }`}
+              >
+                {copiedLink ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>کپی شد</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>کپی لینک</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
 
           <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 space-y-2">
             <div className="font-semibold text-zinc-900 dark:text-zinc-200">
@@ -164,7 +152,7 @@ export function SubscriptionModal({
             </div>
             <ul className="list-disc list-inside space-y-1 text-zinc-600 dark:text-zinc-400">
               <li>
-                <strong className="text-zinc-900 dark:text-zinc-200">v2rayNG (اندروید):</strong> منوی کناری ➔ گروه‌های اشتراک ➔ افزودن (+) ➔ نشانی اشتراک را وارد و ذخیره کنید.
+                <strong className="text-zinc-900 dark:text-zinc-200">v2rayNG / Throne:</strong> منوی اشتراک‌ها ➔ افزودن (+) ➔ نشانی اشتراک را وارد و به‌روزرسانی کنید.
               </li>
               <li>
                 <strong className="text-zinc-900 dark:text-zinc-200">V2RayN (ویندوز):</strong> Subscription group ➔ Subscription setting ➔ Add ➔ لینک را وارد و Update کنید.
@@ -175,8 +163,8 @@ export function SubscriptionModal({
             </ul>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
-            {subUrl ? (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
               <a
                 href={subUrl}
                 target="_blank"
@@ -184,14 +172,32 @@ export function SubscriptionModal({
                 className="text-zinc-500 hover:text-cyan-600 dark:text-zinc-400 dark:hover:text-cyan-400 flex items-center gap-1 transition"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>مشاهده محتوا در مرورگر</span>
+                <span>مشاهده در مرورگر</span>
               </a>
-            ) : (
-              <div />
-            )}
+
+              <button
+                type="button"
+                onClick={handleCopyAllConfigs}
+                className="text-zinc-600 dark:text-zinc-400 hover:text-cyan-600 dark:hover:text-cyan-300 flex items-center gap-1 transition cursor-pointer"
+                title="کپی مستقیم تمام متن کانفیگ‌ها در کلیپ‌بورد"
+              >
+                {copiedClipboard ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-emerald-600 dark:text-emerald-400">کانفیگ‌ها کپی شدند!</span>
+                  </>
+                ) : (
+                  <>
+                    <Link2 className="w-3.5 h-3.5" />
+                    <span>کپی مستقیم در کلیپ‌بورد</span>
+                  </>
+                )}
+              </button>
+            </div>
+
             <button
               onClick={onClose}
-              className="px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium transition cursor-pointer"
+              className="w-full sm:w-auto px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium transition cursor-pointer"
             >
               بستن
             </button>

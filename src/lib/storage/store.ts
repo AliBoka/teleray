@@ -124,8 +124,17 @@ export class AppStore {
     return snapshot;
   }
 
-  public static async getSnapshot(id: string): Promise<SubscriptionSnapshot | null> {
+  public static async getSnapshot(idOrChannel: string): Promise<SubscriptionSnapshot | null> {
     const data = await this.ensureInitialized();
-    return data.snapshots[id] || null;
+    if (data.snapshots[idOrChannel]) {
+      return data.snapshots[idOrChannel];
+    }
+    const clean = idOrChannel.toLowerCase().trim().replace(/^@+/, '');
+    for (const s of Object.values(data.snapshots)) {
+      if (s.channel.toLowerCase() === clean || s.id.toLowerCase() === clean) {
+        return s;
+      }
+    }
+    return null;
   }
 }
