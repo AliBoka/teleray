@@ -68,7 +68,7 @@ export function Navbar() {
 
         <div className="flex items-center gap-2 shrink-0">
           <a
-            href="https://t.me/tg_v2ray_exporter"
+            href="https://t.me/telerayy"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3 h-9 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 dark:bg-blue-950/60 dark:border-blue-800/60 dark:text-blue-300 dark:hover:bg-blue-900/60 transition text-[13px] sm:text-sm font-mono font-medium"
@@ -76,7 +76,7 @@ export function Navbar() {
             dir="ltr"
           >
             <Send className="w-4 h-4 text-blue-500 shrink-0" />
-            <span className="hidden sm:inline">@tg_v2ray_exporter</span>
+            <span className="hidden sm:inline">@telerayy</span>
             <span className="sm:hidden">چنل</span>
           </a>
 
