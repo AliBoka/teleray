@@ -35,7 +35,9 @@ export async function GET(
         });
         subRecord = await DatabaseService.createSubscription(cleanChannel, configs);
       } catch {
-        return new NextResponse('اشتراک یا کانال یافت نشد.', { status: 404 });
+        return new NextResponse('لینک اشتراک یافت نشد یا مهلت اعتبار ۷ روزه آن به پایان رسیده است.', {
+          status: 404,
+        });
       }
     }
 

@@ -23,7 +23,7 @@ export function SubscriptionModal({
 }: SubscriptionModalProps) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedClipboard, setCopiedClipboard] = useState(false);
-  const [format, setFormat] = useState<'base64' | 'raw'>('base64');
+  const [format, setFormat] = useState<'base64' | 'raw'>('raw');
 
   if (!isOpen) return null;
 
@@ -85,10 +85,15 @@ export function SubscriptionModal({
 
         <div className="space-y-4">
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                آدرس Subscription:
-              </label>
+            <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
+              <div className="flex items-center gap-2">
+                <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  آدرس Subscription:
+                </label>
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/60">
+                  اعتبار: ۷ روز
+                </span>
+              </div>
               <div className="flex items-center gap-1">
                 <button
                   type="button"

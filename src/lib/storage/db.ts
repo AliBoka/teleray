@@ -11,6 +11,7 @@ export interface SubscriptionRecord {
   configs: V2RayConfig[];
   configsCount: number;
   createdAt: string;
+  expiresAt: string;
 }
 
 interface AppData {
@@ -20,6 +21,7 @@ interface AppData {
 }
 
 const generateSubId = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 10);
+const TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days in seconds (604,800s)
 
 export class DatabaseService {
   private static redisClient: Redis | null = null;
@@ -103,22 +105,25 @@ export class DatabaseService {
       .trim();
 
     const uniqueId = generateSubId();
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + TTL_SECONDS * 1000).toISOString();
 
     const record: SubscriptionRecord = {
       id: uniqueId,
       channel: cleanChannel,
       configs,
       configsCount: configs.length,
-      createdAt: new Date().toISOString(),
+      createdAt: now.toISOString(),
+      expiresAt,
     };
 
     const redis = this.getRedis();
 
     if (redis) {
-      // Save in Upstash Redis
-      await redis.set(`sub:${uniqueId}`, JSON.stringify(record));
-      // Map channel to latest subscription ID
-      await redis.set(`channel_sub:${cleanChannel.toLowerCase()}`, uniqueId);
+      // Save in Upstash Redis with native 7-day TTL
+      await redis.set(`sub:${uniqueId}`, JSON.stringify(record), { ex: TTL_SECONDS });
+      // Map channel to latest subscription ID with TTL
+      await redis.set(`channel_sub:${cleanChannel.toLowerCase()}`, uniqueId, { ex: TTL_SECONDS });
 
       // Update channel stats if channel exists in channels list
       const channelsRaw = await redis.get<string>('channels');
@@ -137,6 +142,15 @@ export class DatabaseService {
     } else {
       // Save locally
       const data = await this.getLocalData();
+
+      // Clean up any expired local subscriptions to keep storage compact
+      const currentTimestamp = Date.now();
+      for (const [key, sub] of Object.entries(data.subscriptions)) {
+        if (sub.expiresAt && currentTimestamp > new Date(sub.expiresAt).getTime()) {
+          delete data.subscriptions[key];
+        }
+      }
+
       data.subscriptions[uniqueId] = record;
       data.channelLatestSub[cleanChannel.toLowerCase()] = uniqueId;
 
@@ -191,22 +205,29 @@ export class DatabaseService {
 
     // Local lookup
     const data = await this.getLocalData();
+    const now = Date.now();
+
+    const isRecordExpired = (record: SubscriptionRecord) => {
+      return Boolean(record.expiresAt && now > new Date(record.expiresAt).getTime());
+    };
 
     // 1. Check direct ID
     if (data.subscriptions[clean]) {
-      return data.subscriptions[clean];
+      const record = data.subscriptions[clean];
+      return isRecordExpired(record) ? null : record;
     }
 
     // 2. Check channel latest mapping
     const mappedId = data.channelLatestSub[clean.toLowerCase()];
     if (mappedId && data.subscriptions[mappedId]) {
-      return data.subscriptions[mappedId];
+      const record = data.subscriptions[mappedId];
+      return isRecordExpired(record) ? null : record;
     }
 
     // 3. Fallback search through subscriptions
     for (const sub of Object.values(data.subscriptions)) {
       if (sub.channel.toLowerCase() === clean.toLowerCase()) {
-        return sub;
+        return isRecordExpired(sub) ? null : sub;
       }
     }
 
