@@ -61,6 +61,7 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: 'TeleRay - Telegram V2Ray Subscription Exporter',
+        type: 'image/png',
       },
     ],
   },
@@ -70,6 +71,7 @@ export const metadata: Metadata = {
     description:
       'استخراج خودکار کانفیگ‌های V2Ray از کانال‌های تلگرام و تولید لینک Subscription سازگار با انواع کلاینت‌ها.',
     images: ['/og-image.png'],
+    creator: '@AliBoka',
   },
 };
 
