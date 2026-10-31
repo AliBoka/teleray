@@ -12,12 +12,15 @@ const siteUrl =
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: '/',
+  },
   title: {
     default: 'TeleRay | استخراج خودکار کانفیگ و ساخت سابسکرایبشن تلگرام',
     template: '%s | TeleRay',
   },
   description:
-    'سامانه مدرن و متن‌باز استخراج هوشمند کانفیگ‌های V2Ray (VLESS, VMess, Trojan, Shadowsocks, Hysteria 2, TUIC) از کانال‌های تلگرام و تولید خودکار لینک Subscription بدون نیاز به توکن.',
+    'استخراج خودکار کانفیگ‌های V2Ray از کانال‌های تلگرام و ساخت لینک سابسکرایبشن سازگار با تمام کلاینت‌ها بدون نیاز به توکن.',
   applicationName: 'TeleRay',
   authors: [{ name: 'AliBoka', url: 'https://github.com/AliBoka' }],
   keywords: [
@@ -46,7 +49,6 @@ export const metadata: Metadata = {
     ],
     shortcut: '/favicon.ico',
   },
-  manifest: '/site.webmanifest',
   openGraph: {
     type: 'website',
     locale: 'fa_IR',
@@ -54,24 +56,32 @@ export const metadata: Metadata = {
     siteName: 'TeleRay',
     title: 'TeleRay | استخراج خودکار کانفیگ و ساخت سابسکرایبشن تلگرام',
     description:
-      'استخراج هوشمند کانفیگ‌های V2Ray از کانال‌های عمومی تلگرام و ساخت لینک اشتراک سازگار با v2rayNG ،V2RayN ،Throne و Shadowrocket بدون نیاز به توکن ربات.',
+      'استخراج خودکار کانفیگ‌های V2Ray از کانال‌های تلگرام و ساخت لینک سابسکرایبشن سازگار با تمام کلاینت‌ها بدون نیاز به توکن.',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'TeleRay - Telegram V2Ray Subscription Exporter',
+        alt: 'TeleRay - V2Ray Telegram Subscription Exporter',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@telerayy',
+    creator: '@AliBoka',
     title: 'TeleRay | استخراج خودکار کانفیگ و ساخت سابسکرایبشن تلگرام',
     description:
-      'استخراج خودکار کانفیگ‌های V2Ray از کانال‌های تلگرام و تولید لینک Subscription سازگار با انواع کلاینت‌ها.',
-    images: ['/og-image.png'],
-    creator: '@AliBoka',
+      'استخراج خودکار کانفیگ‌های V2Ray از کانال‌های تلگرام و ساخت لینک سابسکرایبشن سازگار با تمام کلاینت‌ها.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'TeleRay - V2Ray Telegram Subscription Exporter',
+      },
+    ],
   },
 };
 
@@ -82,6 +92,27 @@ export const viewport: Viewport = {
   ],
 };
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'TeleRay',
+  url: siteUrl,
+  description:
+    'استخراج خودکار کانفیگ‌های V2Ray از کانال‌های تلگرام و ساخت لینک سابسکرایبشن سازگار با انواع کلاینت‌ها بدون نیاز به توکن.',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'All',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+  author: {
+    '@type': 'Person',
+    name: 'AliBoka',
+    url: 'https://github.com/AliBoka',
+  },
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -90,6 +121,10 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
